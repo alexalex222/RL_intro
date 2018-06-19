@@ -3,4 +3,4 @@ project(chapter03)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(chapter03 main.cpp)
+add_executable(chapter03 main.cpp gridworld.cpp gridworld.h)

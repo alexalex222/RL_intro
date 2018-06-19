@@ -1,6 +1,9 @@
 #include <iostream>
+#include "gridworld.h"
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    GridWorld g = GridWorld(5);
+    g.compute_state_values(1e-4, true, true);
+
     return 0;
 }
