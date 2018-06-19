@@ -69,7 +69,8 @@ void Gambler::show() {
         std::cout << this->state_values[i] << "\t";
         if (i % 10 == 0) std::cout << std::endl;
     }
-    
+
+
     std::cout << "optimal policy" << std::endl;
     for (int i = 1; i <= this->goal; i++) {
         std::cout << this->policy[i] << "\t";
