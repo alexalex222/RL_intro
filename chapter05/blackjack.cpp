@@ -20,6 +20,18 @@ BlackJack::BlackJack() {
 
     states_value_usable_ace = vector<vector<double>>(10, vector<double>(10, 0.0));
     states_value_no_usable_ace = vector<vector<double>>(10, vector<double>(10, 0.0));
+
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 10; j++) {
+            for (int k = 0; k < 2; k++) {
+                for (int l = 0; l < 2; l++) {
+                    state_action_count[i][j][k][l] = 1.0;
+                    state_action_tot_reward[i][j][k][l] = 0.0;
+                    state_action_values[i][j][k][l] = 0.0;
+                }
+            }
+        }
+    }
 }
 
 int BlackJack::getCard() {
@@ -32,13 +44,40 @@ int BlackJack::target_policy_player(State s) {
     return this->policy_player[s.player_sum];
 }
 
+int BlackJack::random_policy(State s) {
+    int n = static_cast<int>(s.usable_ace);
+    n = std::max(2, n);
+    if (rand()%n) {
+        return hit;
+    }
+    else {
+        return strike;
+    }
+}
+
 int BlackJack::behavior_policy_player(State s) {
     int usable_ace = s.usable_ace;
+    int player_sum = s.player_sum - 12;
+    int dealer_card = s.dealer_card - 1;
+    double values[2];
+    double max_value = -100000;
+    for (int i = 0; i < 2; i++) {
+        values[i] = state_action_tot_reward[player_sum][dealer_card][usable_ace][i]/state_action_count[player_sum][dealer_card][usable_ace][i];
+        if (values[i] > max_value) max_value = values[i];
+    }
+
+    vector<int> possible_action;
+    for (int i = 0; i < 2; i++) {
+        if (values[i] == max_value) possible_action.push_back(i);
+    }
+
+    size_t l = possible_action.size();
+    return possible_action[rand()%l];
 }
 
 
 
-GameResult BlackJack::play(int policy_type, State init_state, int init_action) {
+GameResult BlackJack::play(int (BlackJack::*policy_func)(State), State init_state, int init_action) {
     int action = 0;
     vector<pair<State, int>> player_trajectory;
     bool usable_ace_player = init_state.usable_ace;
@@ -74,14 +113,7 @@ GameResult BlackJack::play(int policy_type, State init_state, int init_action) {
             init_action = 2;
         }
         else {
-            // get action based on current sum
-            if (policy_type == 1) {
-                action = policy_player[s.player_sum];
-            }
-            else {
-                if (std::rand()%2) action = strike;
-                else action = hit;
-            }
+            action = (this->*(policy_func))(s);
         }
 
         // track player's trajectory for importance sampling
@@ -159,7 +191,7 @@ void BlackJack::monte_carlo_on_policy(int n) {
     vector<vector<double>> states_no_usable_ace_count(10, vector<double>(10, 1.0));
 
     for (int i = 0; i < n; i++) {
-        GameResult gr = play(1);
+        GameResult gr = play(&BlackJack::target_policy_player);
         for (auto t : gr.player_trajectory) {
             int player_sum = t.first.player_sum;
             player_sum -= 12;
@@ -185,19 +217,62 @@ void BlackJack::monte_carlo_on_policy(int n) {
 }
 
 void BlackJack::monte_carlo_es(int n) {
-    // player_sum, dealer_card, usable_ace, action
-    double state_action_tot_reward[10][10][2][2];
-    double state_action_count[10][10][2][2];
+    for (int i = 0; i < n; i++) {
+        if (i%1000 == 0) std::cout << "Episode: " << i << std::endl;
+        State init_s = State(true);
+        int init_a = this->actions[rand()%2];
+        GameResult gr = play(&BlackJack::behavior_policy_player, init_s, init_a);
+        for (auto t: gr.player_trajectory) {
+            int usable_ace = static_cast<int>(t.first.usable_ace);
+            int player_sum = t.first.player_sum - 12;
+            int dealer_card = t.first.dealer_card - 1;
+            state_action_tot_reward[player_sum][dealer_card][usable_ace][t.second] += gr.reward;
+            state_action_count[player_sum][dealer_card][usable_ace][t.second] += 1;
+        }
+    }
+
     for (int i = 0; i < 10; i++) {
         for (int j = 0; j < 10; j++) {
             for (int k = 0; k < 2; k++) {
                 for (int l = 0; l < 2; l++) {
-                    state_action_count[i][j][k][l] = 1.0;
-                    state_action_tot_reward[i][j][k][l] = 0.0;
+                    state_action_values[i][j][k][l] = state_action_tot_reward[i][j][k][l]/state_action_count[i][j][k][l];
                 }
             }
         }
     }
+}
 
+void BlackJack::monte_carlo_off_policy(int n) {
+    State init_s = State(true, 13, 2);
+    vector<double> sum_importance_ratio(1, 0.0);
+    vector<double> sum_rewards(1, 0.0);
+
+
+    for (int i = 0; i < n; i++) {
+        GameResult gr = play(&BlackJack::random_policy, init_s);
+        double importance_ratio_up = 1.0;
+        double importance_ratio_low = 1.0;
+
+        for (auto t : gr.player_trajectory) {
+            if (t.second == target_policy_player(t.first)) importance_ratio_low *= 0.5;
+            else {
+                importance_ratio_up = 0.0;
+                break;
+            }
+        }
+
+        double importance_ratio= importance_ratio_up/importance_ratio_low;
+        ordinary_sampling.push_back((sum_importance_ratio.back() + importance_ratio)/(n + 1));
+        sum_importance_ratio.push_back(sum_importance_ratio.back() + importance_ratio);
+        sum_rewards.push_back(sum_rewards.back() + gr.reward*importance_ratio);
+    }
+
+    sum_importance_ratio.erase(sum_importance_ratio.begin());
+    sum_rewards.erase(sum_rewards.begin());
+
+    for (int i = 0; i < n; i++) {
+        if (sum_importance_ratio[i] != 0)  weight_sampling.push_back(sum_rewards[i]/sum_importance_ratio[i]);
+        else weight_sampling.push_back(0.0);
+    }
 
 }

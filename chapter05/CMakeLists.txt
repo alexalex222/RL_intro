@@ -3,4 +3,4 @@ project(chapter05)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(chapter05 main.cpp blackjack.cpp blackjack.h)
+add_executable(chapter05 main.cpp blackjack.cpp blackjack.h infinitevariance.h)
