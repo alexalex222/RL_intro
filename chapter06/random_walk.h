@@ -27,7 +27,7 @@ private:
     double gamma;		// discount
 
 public:
-    RandomWalk(int n=19, int start=10, double discount=1.0);
+    RandomWalk(int left_reward=-1, int right_reward=1, int n=19, double discount=1.0);
     void temporalDifference(vector<double>& state_values, int n, double alpha);
     void testLearning();
 

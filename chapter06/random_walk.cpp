@@ -5,17 +5,21 @@
 #include "random_walk.h"
 
 
-RandomWalk::RandomWalk(int n, int start, double discount) {
+RandomWalk::RandomWalk(int left_reward, int right_reward, int n, double discount) {
     this->n_states = n;
-    this->start_state = start;
+    this->start_state = (n + 1)/2;
     this->gamma = discount;
     this->init_state_values = vector<double>(this->n_states + 2, 0.0);
 
-    for (int i = -(n+1); i <= (n-1); i = i + 2) {
-        this->real_state_values.push_back(static_cast<double>(i) / 20.0);
+    for (int i = (n+1)*left_reward; i <= n*right_reward; i = i + (right_reward - left_reward)) {
+        this->real_state_values.push_back(static_cast<double>(i) / (n+1));
     }
     this->real_state_values.push_back(0.0);
     this->real_state_values[0] = 0.0;
+
+    for (size_t t = 0; t < real_state_values.size(); t++) {
+        std::cout << real_state_values[t] << std::endl;
+    }
 
     this->end_states.push_back(0);
     this->end_states.push_back(n + 1);
@@ -109,7 +113,7 @@ void RandomWalk::testLearning() {
             for (size_t alpha_idx = 0; alpha_idx < alphas.size(); alpha_idx++) {
                 int step = steps[step_idx];
                 double alpha = alphas[alpha_idx];
-                std::cout << "Run: " << run + 1 << " Step: " << step << " alpha: " << alpha << std::endl;
+                // std::cout << "Run: " << run + 1 << " Step: " << step << " alpha: " << alpha << std::endl;
                 vector<double> current_state_values(this->n_states + 2, 0.0);
                 for (int ep = 0; ep < episodes; ep++) {
                     temporalDifference(current_state_values, step, alpha);
