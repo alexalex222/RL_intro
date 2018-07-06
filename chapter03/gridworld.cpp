@@ -109,6 +109,8 @@ void GridWorld::compute_state_values(double tolerance, bool in_place, bool optim
 
         if (e < tolerance) {
             state_values = new_state_values;
+            if(optimal) std::cout << "Optimal policy" << std::endl;
+            else std::cout << "Random policy" << std::endl;
             this->print_state_values();
             break;
         }
@@ -123,11 +125,35 @@ void GridWorld::compute_state_values(double tolerance, bool in_place, bool optim
 void GridWorld::print_state_values() {
     std::cout.precision(2);
     std::cout << std::fixed;
-    std::cout << "State values under random policy after " << this->iteration << " iterations. " << std::endl;
+    std::cout << "State values after " << this->iteration << " iterations. " << std::endl;
     for(int i = 0; i < this->world_size; i++) {
         for(int j = 0; j < this->world_size; j++) {
             std::cout <<  this->state_values[i][j] << "\t";
         }
         std::cout << std::endl;
     }
+}
+
+void GridWorld::write_results() {
+    std::ofstream my_file;
+    my_file.open ("state_values.csv");
+    for (int i = 0; i < world_size; i++) {
+        for (int j = 0; j < world_size; j++) {
+            my_file << state_values[i][j];
+            if (j != world_size - 1) my_file << ",";
+        }
+        my_file << "\n";
+    }
+}
+
+void GridWorld::show_results() {
+    write_results();
+
+    std::string filename = "../plot_results.py";
+    std::string command = "python ";
+    command += filename;
+    system(command.c_str());
+
+
+
 }

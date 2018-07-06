@@ -8,6 +8,8 @@
 #include <vector>
 #include <unordered_map>
 #include <iostream>
+#include <Python.h>
+#include <fstream>
 
 using std::vector;
 using std::pair;
@@ -32,6 +34,8 @@ public:
     pair<int, int> next_state(pair<int, int> state, char action);
     void compute_state_values(double tolerance=1e-4, bool in_place=true, bool optimal=false);
     void print_state_values();
+    void write_results();
+    void show_results();
 };
 
 
