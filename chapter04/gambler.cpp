@@ -62,18 +62,32 @@ void Gambler::get_optimal_policy() {
 }
 
 void Gambler::show() {
+    std::ofstream my_file;
+    my_file.open ("state_values.csv");
     std::cout.precision(2);
     std::cout << std::fixed;
     std::cout << "state values: " << std::endl;
     for (int i = 1; i <= this->goal; i++) {
+        my_file << state_values[i];
+        if (i != this->goal) my_file << "\n";
         std::cout << this->state_values[i] << "\t";
         if (i % 10 == 0) std::cout << std::endl;
     }
+    my_file.close();
 
 
+    my_file.open ("optimal_policy.csv");
     std::cout << "optimal policy" << std::endl;
     for (int i = 1; i <= this->goal; i++) {
+        my_file << policy[i];
+        if (i != this->goal) my_file << "\n";
         std::cout << this->policy[i] << "\t";
         if (i % 10 == 0) std::cout << std::endl;
     }
+    my_file.close();
+
+    std::string filename = "../plot_results.py";
+    std::string command = "python ";
+    command += filename;
+    system(command.c_str());
 }

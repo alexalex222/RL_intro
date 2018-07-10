@@ -9,6 +9,7 @@
 #include <math.h>
 #include <algorithm>
 #include <iostream>
+#include <fstream>
 
 using std::vector;
 

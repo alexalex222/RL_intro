@@ -144,6 +144,7 @@ void GridWorld::write_results() {
         }
         my_file << "\n";
     }
+    my_file.close();
 }
 
 void GridWorld::show_results() {

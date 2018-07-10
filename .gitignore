@@ -1,4 +1,8 @@
 **/cmake-build-debug/*
 **/.idea/*
-chapter04/cmake-build-debug/*
-chapter04/.idea/*
+**/CMakeFiles/*
+**/CMakeScripts/*
+**/*.xcodeproj
+**/*.cmake
+**/CMakeCache.txt
+**/*.txt.user

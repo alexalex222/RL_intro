@@ -23,6 +23,7 @@ GridStatus::GridStatus(GridStatus *p) {
 }
 
 int GridStatus::getHash() {
+    this->hashVal = 0;
     for (int i = 0; i < this->rows; i++) {
         for (int j = 0; j < this->cols; j++) {
             int a = this->data[i][j];
@@ -31,6 +32,22 @@ int GridStatus::getHash() {
         }
     }
     return this->hashVal;
+}
+
+int GridStatus::getRow() {
+    return this->rows;
+}
+
+int GridStatus::getCol() {
+    return this->cols;
+}
+
+vector<vector<int>> GridStatus::getData() {
+    return this->data;
+}
+
+int GridStatus::getWinner() {
+    return this->winner;
 }
 
 bool GridStatus::isEnd() {
@@ -56,7 +73,7 @@ bool GridStatus::isEnd() {
     for(int i = 0; i < this->rows; i++) s += this->data[i][cols - 1 -i];
     result.push_back(s);
 
-    for(std::vector<int>::iterator i = result.begin(); i != result.end(); i++) {
+    for(auto i = result.begin(); i != result.end(); i++) {
         if(*i == 3) {
             this->winner = 1;
             this->end = true;
@@ -78,7 +95,7 @@ bool GridStatus::isEnd() {
     }
     if (s == this->rows*this->cols) {
         this->winner = 0;
-        this->end = 0;
+        this->end = true;
         return this->end;
     }
     // game still going on
@@ -109,4 +126,31 @@ GridStatus GridStatus::nextStatus(int row, int col, int symbol) {
     GridStatus n = GridStatus(this);
     n.data[row][col] = symbol;
     return n;
+}
+
+void GridStatus::getAllStatesImpl(GridStatus current_state, int current_symbol,
+                                  unordered_map<int, GridStatus> &all_states)
+{
+    for (int i = 0; i < current_state.getRow(); i++) {
+        for (int j = 0; j < current_state.getCol(); j++) {
+            if (current_state.getData()[i][j] == 0) {
+                GridStatus next_state = current_state.nextStatus(i, j, current_symbol);
+                int new_hash = next_state.getHash();
+                if (all_states.find(new_hash) == all_states.end()) {
+                    all_states.emplace(new_hash, next_state);
+                    if (!next_state.isEnd()) {
+                        GridStatus::getAllStatesImpl(next_state, -current_symbol, all_states);
+                    }
+                }
+            }
+        }
+    }
+}
+
+unordered_map<int, GridStatus> GridStatus::getAllStates(GridStatus current_state) {
+    int current_symbol = 1;
+    unordered_map<int, GridStatus> all_states;
+    all_states.emplace(current_state.getHash(), current_state);
+    GridStatus::getAllStatesImpl(current_state, current_symbol, all_states);
+    return all_states;
 }
