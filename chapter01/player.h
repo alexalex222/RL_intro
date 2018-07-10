@@ -22,24 +22,21 @@ using std::multimap;
 
 class Player {
 protected:
-    std::vector<GridStatus> allStates;
-    std::unordered_map<int, double> estimations;
     double step_size;
     double explore_rate;
-    vector<GridStatus> states;
-    unordered_map<int, GridStatus> all_states;
+    GridStatus current_state;
     int symbol;
-
 public:
-    Player(double stepSize=0.1, double exploreRate=0.1);
-    void reset();
-    void setSymbol(int s);
-    void feedState(GridStatus state);
-    void feedReward(double reward);
-    vector<int> takeAction();
-    void savePolicy();
-    void loadPolicy();
+    Player(double s, double r);
+    virtual void reset() = 0;   // pure virtual function
+    virtual void setSymbol(int s);
+    virtual void feedState(GridStatus state) = 0;   //pure virtual function
+    virtual void feedReward(double reward) = 0; //pure virtual function
+    virtual vector<int> takeAction() = 0;   // pure virtual function
+    int getSymbol();
 };
+
+
 
 
 #endif //CHAPTER01_PLAYER_H

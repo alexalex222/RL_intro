@@ -111,7 +111,7 @@ void GridStatus::show() {
         std::cout<<"-------------"<<std::endl;
         out = "| ";
         for (int j = 0; j < this->cols; j++) {
-            if (this->data[i][i] == 1) token = "*";
+            if (this->data[i][j] == 1) token = "*";
             else if (this->data[i][j] == 0) token = "0";
             else if (this->data[i][j] == -1) token = "x";
 

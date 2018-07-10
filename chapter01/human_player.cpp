@@ -4,14 +4,9 @@
 
 #include "human_player.h"
 
-HumanPlayer::HumanPlayer(double s, double r) {
-    this->step_size = s;
-    this->explore_rate = r;
-}
+HumanPlayer::HumanPlayer(double s, double r):Player(s, r) {}
 
-void HumanPlayer::reset() {
-    return;
-}
+void HumanPlayer::reset() {}
 
 void HumanPlayer::setSymbol(int s) {
     this->symbol = s;
@@ -21,9 +16,7 @@ void HumanPlayer::feedState(GridStatus state) {
     this->current_state = state;
 }
 
-void HumanPlayer::feedReward(double reward) {
-    return;
-}
+void HumanPlayer::feedReward(double reward) {}
 
 vector<int> HumanPlayer::takeAction() {
     std::cout << "Input your position:" << std::endl;

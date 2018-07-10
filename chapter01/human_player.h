@@ -7,22 +7,17 @@
 
 
 #include "gridstatus.h"
+#include "player.h"
 #include <iostream>
 
-class HumanPlayer {
-private:
-    double step_size;
-    double explore_rate;
-    GridStatus current_state;
-    int symbol;
-
+class HumanPlayer: public Player {
 public:
     HumanPlayer(double s, double r);
-    void reset();
-    void setSymbol(int s);
-    void feedState(GridStatus state);
-    void feedReward(double reward);
-    vector<int> takeAction();
+    void reset() override;
+    void setSymbol(int s) override;
+    void feedState(GridStatus state) override;
+    void feedReward(double reward) override ;
+    vector<int> takeAction() override;
 
 };
 
