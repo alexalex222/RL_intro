@@ -6,3 +6,5 @@
 **/*.cmake
 **/CMakeCache.txt
 **/*.txt.user
+**/Debug/*
+**/*.build/*
