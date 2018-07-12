@@ -14,6 +14,6 @@ int main() {
     std::string filename = "../plot_results.py";
     std::string command = "python ";
     command += filename;
-    system((command + " epsilon_greedy  opt_init  ucb gradient").c_str());
+    system((command + " epsilon_greedy opt_init ucb gradient").c_str());
     return 0;
 }

@@ -94,14 +94,20 @@ void opt_init_values(unsigned long n_bandits, unsigned long episodes) {
     std::cout << "Optimistic initial values..." << std::endl;
     vector<double> init_values {5.0, 0.0};
     vector<vector<Bandit>> bandits;
-    for (auto init : init_values) {
-        vector<Bandit> one_type_bandits;
-        for (int i = 0; i < n_bandits; i++) {
-            Bandit one_bandit(10, 0.0, 0.1, init, false, 0, false, false, 0.0);
-            one_type_bandits.push_back(one_bandit);
-        }
-        bandits.push_back(one_type_bandits);
+    vector<Bandit> type_bandits1;
+    vector<Bandit> type_bandits2;
+
+    for (int i = 0; i < n_bandits; i++) {
+        // k_arm, explore_rate, step, init, use_sample_average, ucb, gradient, gradient_baseline, true_reward
+        Bandit bandit1(10, 0.0, 0.1, init_values[0], false, 0, false, false, 0.0);
+        Bandit bandit2(10, 0.1, 0.1, init_values[1], false, 0, false, false, 0.0);
+
+        type_bandits1.push_back(bandit1);
+        type_bandits2.push_back(bandit2);
     }
+
+    bandits.push_back(type_bandits1);
+    bandits.push_back(type_bandits2);
 
     vector<vector<double>> best_action_counts;
     vector<vector<double>> average_rewards;

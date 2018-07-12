@@ -20,10 +20,12 @@ def draw_image(type_name):
     axes[1].set_xlabel('Episodes')
     axes[1].set_ylabel('Optimal action %')
     axes[1].legend(df_actions.columns.values)
+    plt.tight_layout()
 
     
 if __name__ == "__main__":
     plt.close('all')
+    plt.style.use('ggplot')
     draw_image(sys.argv[1])
     draw_image(sys.argv[2])
     draw_image(sys.argv[3])
