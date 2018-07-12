@@ -23,7 +23,7 @@ void bandit_simulation(unsigned long episodes, vector<vector<Bandit>> &bandits,
                 double reward = bandit[i].takeAction(action);
                 average_rewards[bandit_ind][t] += reward;
                 if (action == bandit[i].getBestAction()) {
-                    best_action_counts[bandit_types][t] += 1;
+                    best_action_counts[bandit_ind][t] += 1;
                 }
             }
         }
@@ -40,9 +40,13 @@ void epsilon_greedy(size_t n_bandits, unsigned long episodes) {
     vector<double> epsilons {0.0, 0.1, 0.01};
     vector<vector<Bandit>> bandits;
     for (auto ep : epsilons) {
-        // k_arm, explore_rate, step, init, use_sample_average, ucb, gradient, gradient_baseline, true_reward
-        Bandit one_bandit(10, ep, 0.1, 0.0, true, 0, false, false, 0.0);
-        bandits.emplace_back(vector<Bandit>(n_bandits,one_bandit));
+        vector<Bandit> one_type_bandits;
+        for (int i = 0; i < n_bandits; i++) {
+            // k_arm, explore_rate, step, init, use_sample_average, ucb, gradient, gradient_baseline, true_reward
+            Bandit one_bandit(10, ep, 0.1, 0.0, true, 0, false, false, 0.0);
+            one_type_bandits.push_back(one_bandit);
+        }
+        bandits.push_back(one_type_bandits);
     }
     vector<vector<double>> best_action_counts;
     vector<vector<double>> average_rewards;
@@ -65,11 +69,11 @@ void epsilon_greedy(size_t n_bandits, unsigned long episodes) {
             ofs_rewards << ",";
         }
     }
-    for (size_t episode = 0; episode < episodes; episodes ++)
+    for (size_t episode = 0; episode < episodes; episode++)
     {
         for (size_t i = 0; i < bandits.size(); i++)
         {
-            ofs_counts << best_action_counts[i][episodes];
+            ofs_counts << best_action_counts[i][episode];
             ofs_rewards << average_rewards[i][episode];
             if (i == bandits.size() - 1) {
                 ofs_counts << "\n";
@@ -87,11 +91,17 @@ void epsilon_greedy(size_t n_bandits, unsigned long episodes) {
 }
 
 void opt_init_values(unsigned long n_bandits, unsigned long episodes) {
-    std::cout << "Optimistic initial vlaues" << std::endl;
+    std::cout << "Optimistic initial values..." << std::endl;
     vector<double> init_values {5.0, 0.0};
     vector<vector<Bandit>> bandits;
-    bandits.emplace_back(vector<Bandit>(n_bandits, Bandit(10, 0.0, 0.1, init_values[0], false, 0, false, false, 0.0)));
-    bandits.emplace_back(vector<Bandit>(n_bandits, Bandit(10, 0.1, 0.1, init_values[1], false, 0, false, false, 0.0)));
+    for (auto init : init_values) {
+        vector<Bandit> one_type_bandits;
+        for (int i = 0; i < n_bandits; i++) {
+            Bandit one_bandit(10, 0.0, 0.1, init, false, 0, false, false, 0.0);
+            one_type_bandits.push_back(one_bandit);
+        }
+        bandits.push_back(one_type_bandits);
+    }
 
     vector<vector<double>> best_action_counts;
     vector<vector<double>> average_rewards;
@@ -104,11 +114,11 @@ void opt_init_values(unsigned long n_bandits, unsigned long episodes) {
     ofs_rewards << "epsilon = 0 q = 5" << "," << "epsilon = 0.1 q = 0" << "\n";
 
 
-    for (size_t episode = 0; episode < episodes; episodes ++)
+    for (size_t episode = 0; episode < episodes; episode++)
     {
         for (size_t i = 0; i < bandits.size(); i++)
         {
-            ofs_counts << best_action_counts[i][episodes];
+            ofs_counts << best_action_counts[i][episode];
             ofs_rewards << average_rewards[i][episode];
             if (i == bandits.size() - 1) {
                 ofs_counts << "\n";
@@ -127,13 +137,23 @@ void opt_init_values(unsigned long n_bandits, unsigned long episodes) {
 
 void ucb(unsigned long n_bandits, unsigned long episodes) {
     std::cout << "UCB..." << std::endl;
-    vector<int> ucbs {2, 0};
-    // k_arm, explore_rate, step, init, use_sample_average, ucb, gradient, gradient_baseline, true_reward
-    Bandit bandit1(10, 0.0, 0.1, 0.0, false, ucbs[0], false, false, 0.0);
-    Bandit bandit2(10, 0.1, 0.1, 0.0, false, ucbs[1], false, false, 0.0);
     vector<vector<Bandit>> bandits;
-    bandits.emplace_back(vector<Bandit>(n_bandits, bandit1));
-    bandits.emplace_back(vector<Bandit>(n_bandits, bandit2));
+    vector<Bandit> type_bandits1;
+    vector<Bandit> type_bandits2;
+    vector<int> ucbs {2, 0};
+
+
+    for (int i = 0; i < n_bandits; i++) {
+        // k_arm, explore_rate, step, init, use_sample_average, ucb, gradient, gradient_baseline, true_reward
+        Bandit bandit1(10, 0.0, 0.1, 0.0, false, ucbs[0], false, false, 0.0);
+        Bandit bandit2(10, 0.1, 0.1, 0.0, false, ucbs[1], false, false, 0.0);
+
+        type_bandits1.push_back(bandit1);
+        type_bandits2.push_back(bandit2);
+    }
+
+    bandits.push_back(type_bandits1);
+    bandits.push_back(type_bandits2);
 
     vector<vector<double>> best_action_counts;
     vector<vector<double>> average_rewards;
@@ -146,11 +166,11 @@ void ucb(unsigned long n_bandits, unsigned long episodes) {
     ofs_rewards << "UCB = 2" << "," << "epsilon greedy epsilon = 0.1" << "\n";
 
 
-    for (size_t episode = 0; episode < episodes; episodes ++)
+    for (size_t episode = 0; episode < episodes; episode++)
     {
         for (size_t i = 0; i < bandits.size(); i++)
         {
-            ofs_counts << best_action_counts[i][episodes];
+            ofs_counts << best_action_counts[i][episode];
             ofs_rewards << average_rewards[i][episode];
             if (i == bandits.size() - 1) {
                 ofs_counts << "\n";
@@ -169,17 +189,30 @@ void ucb(unsigned long n_bandits, unsigned long episodes) {
 
 void gradientBandit(unsigned long n_bandits, unsigned long episodes) {
     std::cout << "Gradient methods..." << std::endl;
-    // k_arm, explore_rate, step, init, use_sample_average, ucb, gradient, gradient_baseline, true_reward
-    Bandit bandit1(10, 0.0, 0.1, 0.0, false, 0, true, true, 4.0);
-    Bandit bandit2(10, 0.0, 0.1, 0.0, false, 0, true, false, 4.0);
-    Bandit bandit3(10, 0.0, 0.4, 0.0, false, 0, true, true, 4.0);
-    Bandit bandit4(10, 0.0, 0.4, 0.0, false, 0, true, false, 4.0);
-
     vector<vector<Bandit>> bandits;
-    bandits.emplace_back(vector<Bandit>(n_bandits, bandit1));
-    bandits.emplace_back(vector<Bandit>(n_bandits, bandit2));
-    bandits.emplace_back(vector<Bandit>(n_bandits, bandit3));
-    bandits.emplace_back(vector<Bandit>(n_bandits, bandit4));
+    vector<Bandit> type_bandits1;
+    vector<Bandit> type_bandits2;
+    vector<Bandit> type_bandits3;
+    vector<Bandit> type_bandits4;
+    for (int i = 0; i < n_bandits; i++) {
+        // k_arm, explore_rate, step, init, use_sample_average, ucb, gradient, gradient_baseline, true_reward
+        Bandit bandit1(10, 0.0, 0.1, 0.0, false, 0, true, true, 4.0);
+        Bandit bandit2(10, 0.0, 0.1, 0.0, false, 0, true, false, 4.0);
+        Bandit bandit3(10, 0.0, 0.4, 0.0, false, 0, true, true, 4.0);
+        Bandit bandit4(10, 0.0, 0.4, 0.0, false, 0, true, false, 4.0);
+
+        type_bandits1.push_back(bandit1);
+        type_bandits2.push_back(bandit2);
+        type_bandits3.push_back(bandit3);
+        type_bandits4.push_back(bandit4);
+    }
+
+
+
+    bandits.push_back(type_bandits1);
+    bandits.push_back(type_bandits2);
+    bandits.push_back(type_bandits3);
+    bandits.push_back(type_bandits4);
 
     vector<vector<double>> best_action_counts;
     vector<vector<double>> average_rewards;
@@ -193,11 +226,11 @@ void gradientBandit(unsigned long n_bandits, unsigned long episodes) {
     ofs_rewards << "alpha = 0.1 with baseline" << "," << "alpha = 0.1 without baseline" <<  ",";
     ofs_rewards << "alpha = 0.4 with baseline" << "," << "alpha = 0.4 without baseline" << "\n";
 
-    for (size_t episode = 0; episode < episodes; episodes ++)
+    for (size_t episode = 0; episode < episodes; episode++)
     {
         for (size_t i = 0; i < bandits.size(); i++)
         {
-            ofs_counts << best_action_counts[i][episodes];
+            ofs_counts << best_action_counts[i][episode];
             ofs_rewards << average_rewards[i][episode];
             if (i == bandits.size() - 1) {
                 ofs_counts << "\n";

@@ -70,13 +70,19 @@ int Bandit::getAction() {
             exp_est[i] = exp(q_est[i]);
             sum_est += exp_est[i];
         }
-        for (int i ;i < k; i++) {
+        for (int i = 0 ;i < k; i++) {
             action_prob[i] = exp_est[i]/sum_est;
         }
         return weight_random_choice(indices, action_prob);
     }
 
-    return 999;
+    for (int i = 0; i < k; i++) {
+        if (q_est[i] > best_value) {
+            best_value = q_est[i];
+            best_action = i;
+        }
+    }
+    return best_action;
 }
 
 double Bandit::takeAction(int action) {
