@@ -4,12 +4,14 @@
 
 #include "random_walk.h"
 
-
 RandomWalk::RandomWalk(int n, int left_reward, int right_reward, double discount): action_left(-1), action_right(1) {
     this->n_states = n;
     this->start_state = (n + 1)/2;
     this->gamma = discount;
     this->step_range = 100;
+
+    this->actions.push_back(action_left);
+    this->actions.push_back(action_right);
 
     for (int i = 0; i <= n; i++) {
         this->states.push_back(i);
@@ -25,7 +27,8 @@ RandomWalk::RandomWalk(int n, int left_reward, int right_reward, double discount
         for (int state = 1; state <= n; state++) {
             real_state_values[state] = 0.0;
             for (int action : actions) {
-                for (int step = 1; step <= step_range; step++) {
+                for (int s = 1; s <= step_range; s++) {
+                    int step = s;
                     step = step*action;
                     int new_state = state + step;
                     new_state = std::max(std::min(new_state, this->n_states+1), 0);
@@ -44,10 +47,6 @@ RandomWalk::RandomWalk(int n, int left_reward, int right_reward, double discount
     // correct the state values for terminal states
     this->real_state_values.back() = 0.0;
     this->real_state_values[0] = 0.0;
-
-    for (size_t t = 0; t < real_state_values.size(); t++) {
-        std::cout << real_state_values[t] << std::endl;
-    }
 
     this->end_states.push_back(0);
     this->end_states.push_back(n + 1);
@@ -81,4 +80,13 @@ vector<int> RandomWalk::getEndStates() {
 
 int RandomWalk::getStartState() {
     return start_state;
+}
+
+double RandomWalk::getTrueStateValue(int state) {
+    return real_state_values[state];
+}
+
+bool RandomWalk::isTerminal(int state) {
+    if (std::find(end_states.begin(), end_states.end(), state) == end_states.end()) return false;
+    else return true;
 }

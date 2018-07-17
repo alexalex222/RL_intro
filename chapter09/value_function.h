@@ -15,15 +15,16 @@ public:
 
     ValueFunction();
 
+    virtual ~ValueFunction();
+
     // get the state value
     virtual double value(int state) = 0;
 
-    /*
-     update parameters
-     @delta: step size * (target - old estimation)
-     @state: state of current sample
-     */
+    ///
+    /// \param state : state of current sample
+    /// \param delta : step size * (target - old estimation)
     virtual void update(int state, double delta) = 0;
+
 };
 
 

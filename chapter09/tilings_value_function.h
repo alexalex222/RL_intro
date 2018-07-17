@@ -20,22 +20,18 @@ private:
     vector<int> tilings;
 
 public:
-    /*
-     * @obj: RandWalk object
-     * @n: # of tilings
-     * @width: each tiling has several tiles, this parameter specifies the width of each tile
-     * @offset: specifies how tilings are put together
-     */
+    ///
+    /// \param n : # of tilings
+    /// \param width : each tiling has several tiles, this parameter specifies the width of each tile
+    /// \param offset : specifies how tilings are put together
     TilingsValueFunction(int n, int width, int offset);
 
     // get the value of the state
     double value(int state) override;
 
-    /*
-     * update parameters
-     * @state: state of current sample
-     * @delta: step size * (target - old estimation)
-     */
+    ///
+    /// \param state : state of current sample
+    /// \param delta : step size * (target - old estimation)
     void update(int state, double delta) override;
 };
 

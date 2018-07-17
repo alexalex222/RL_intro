@@ -9,7 +9,7 @@
 #include "value_function.h"
 #include "aggreg_value_function.h"
 #include "tilings_value_function.h"
-#include "bases_value_function.h"
+#include "basis_value_function.h"
 
 /*
  * gradient Monte Carlo algorithm
@@ -22,9 +22,9 @@ void gradientMonteCarlo(ValueFunction* vf, double alpha, vector<double>* distrib
     vector<int> trajectory;
     trajectory.push_back(current_state);
 
-    vector<int> end_states = vf->p.getEndStates();
+
     int reward = 0;
-    while (std::find(end_states.begin(), end_states.end(), current_state) == end_states.end()) {
+    while (!(vf->p.isTerminal(current_state))) {
         int action = vf->p.getAction();
         pair<int, int> result = vf->p.takeAction(current_state, action);
         int new_state = result.first;
@@ -47,10 +47,10 @@ void gradientMonteCarlo(ValueFunction* vf, double alpha, vector<double>* distrib
 /*
  * semi-gradient n-step TD algorithm
  * @valueFunction: an instance of class ValueFunction
- * @n: # of steps
  * @alpha: step size
+ * @n: # of steps
  */
-void semiGradientTemporalDifference(ValueFunction* vf, int alpha, int n) {
+void semiGradientTemporalDifference(ValueFunction* vf, double alpha, int n) {
     int current_state =vf->p.getStartState();
     vector<int> trajectory;
     trajectory.push_back(current_state);

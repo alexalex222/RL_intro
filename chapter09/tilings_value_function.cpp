@@ -6,11 +6,11 @@
 
 TilingsValueFunction::TilingsValueFunction(int n, int width, int offset) : num_tilings(n), tile_width(width), tile_offset(offset)
 {
-    // To make sure that each sate is covered by same number of tiles, we need one more tile for each tiling
-    tile_size = p.getSize() / (tile_width + 1);
+    /// To make sure that each sate is covered by same number of tiles, we need one more tile for each tiling
+    tile_size = p.getSize() / tile_width + 1;
     params = vector<vector<double>>(num_tilings, vector<double>(tile_size, 0.0));
 
-    /*
+    /**
      * For performance, only track the starting position for each tiling
      * As we have one more tile for each tiling, the starting position will be negative
      */
@@ -30,7 +30,7 @@ double TilingsValueFunction::value(int state) {
 }
 
 void TilingsValueFunction::update(int state, double delta) {
-    /*
+    /**
      * each state is covered by same number of tilings
      * so the delta should be divided equally into each tiling (tile)
      */

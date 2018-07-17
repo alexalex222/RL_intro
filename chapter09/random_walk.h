@@ -32,12 +32,14 @@ private:
     int step_range;     // maximum stride for an action
 
 public:
-    RandomWalk(int n = 1000, int left_reward=-1, int right_reward=1, double discount=1.0);
+    explicit RandomWalk(int n = 1000, int left_reward=-1, int right_reward=1, double discount=1.0);
     pair<int, int> takeAction(int state, int action);
     int getAction();
     int getSize();
     vector<int> getEndStates();
     int getStartState();
+    double getTrueStateValue(int state);
+    bool isTerminal(int state);
 
 };
 

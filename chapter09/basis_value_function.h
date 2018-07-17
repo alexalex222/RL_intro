@@ -13,28 +13,26 @@
 #define FOURIER_BASES 1
 
 // a wrapper class for polynomial / Fourier -based value function
-class BasesValueFunction: public ValueFunction {
+class BasisValueFunction: public ValueFunction {
 private:
     unsigned long order;
     vector<double> params;
     std::vector<std::function<double(double)>> bases;
 
 public:
-    /*
-     * @obj: RandomWalk object
-     * @ord: # of bases, each function also has one more constant parameter (called bias in machine learning)
-     * @type: polynomial bases or Fourier bases
-     */
-    BasesValueFunction(unsigned long ord, int type);
+    ///
+    /// \param ord: # of bases, each function also has one more constant parameter (called bias in machine learning)
+    /// \param type: polynomial basis or Fourier basis
+    explicit BasisValueFunction(unsigned long ord, int type);
 
-    // get the value of state
+    ///
+    /// \param state: the state of random walk
+    /// \return state value
     double value(int state) override;
 
-    /*
-     update parameters
-     @delta: step size * (target - old estimation)
-     @state: state of current sample
-     */
+    ///
+    /// \param state: the state of random walk
+    /// \param delta: step size * (target - old estimation)
     void update(int state, double delta) override;
 
 };

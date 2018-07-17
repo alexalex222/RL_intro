@@ -15,7 +15,9 @@ private:
     vector<double> params;  // theta
 
 public:
-    AggregValueFunction(int group_num);
+    explicit AggregValueFunction(int group_num);
+
+    ~AggregValueFunction();
 
     // get state value
     double value(int state) override;

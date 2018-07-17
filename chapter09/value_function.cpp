@@ -9,3 +9,7 @@ ValueFunction::ValueFunction() {
     p = RandomWalk(1000, -1, 1);
 }
 
+ValueFunction::~ValueFunction() {
+    std::cout << "Destroy ValueFunction" << std::endl;
+}
+

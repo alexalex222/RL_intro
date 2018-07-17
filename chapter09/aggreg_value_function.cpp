@@ -7,6 +7,11 @@
 AggregValueFunction::AggregValueFunction(int group_num) {
     this->groups = group_num;
     this->groups_size = p.getSize()/group_num;
+    this->params = vector<double>(group_num, 0.0);
+}
+
+AggregValueFunction::~AggregValueFunction() {
+    std::cout << "Destroy AggregValueFunction" << std::endl;
 }
 
 double AggregValueFunction::value(int state) {
