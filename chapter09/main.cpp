@@ -2,14 +2,15 @@
 #include <fstream>
 #include "learning_methods.h"
 
+
 void testMonteCarlo() {
     int episodes = 100000;
     double alpha = 2e-5;
     int n_states = 1000;
 
     // we have 10 aggregations in this example, each has 100 states
-    ValueFunction* vf = new AggregValueFunction(10);
-    vector<double>* distribution = new vector<double >(1000+2, 0.0);
+    unique_ptr<ValueFunction> vf(new AggregValueFunction(10));
+    unique_ptr<vector<double>> distribution(new vector<double >(1000+2, 0.0));
     for (int e = 0; e < episodes; e++) {
         gradientMonteCarlo(vf, alpha, distribution);
     }
@@ -29,8 +30,6 @@ void testMonteCarlo() {
     }
     ofs.close();
 
-    delete vf;
-
 }
 
 void testSemiGradientTD() {
@@ -39,7 +38,7 @@ void testSemiGradientTD() {
     int n_states = 1000;
 
     // we have 10 aggregations in this example, each has 100 states
-    ValueFunction* vf = new AggregValueFunction(10);
+    unique_ptr<ValueFunction> vf(new AggregValueFunction(10));
     for (int e = 0; e < episodes; e++) {
         std::cout << "Episode: " << e << std::endl;
         semiGradientTemporalDifference(vf, alpha, 1);   // one step TD
@@ -52,7 +51,6 @@ void testSemiGradientTD() {
     }
     ofs.close();
 
-    delete vf;
 }
 
 void paramsTD() {
@@ -84,7 +82,7 @@ void paramsTD() {
             for (size_t alpha_ind = 0; alpha_ind < alphas.size(); alpha_ind++) {
                 double alpha = alphas[alpha_ind];
                 std::cout << "run: " << run << " step: " << step << " alpha: " << alpha << std::endl;
-                ValueFunction *vf = new AggregValueFunction(20);
+                unique_ptr<ValueFunction>vf(new AggregValueFunction(20));
                 for (int ep = 0; ep < episodes; ep++) {
                     semiGradientTemporalDifference(vf, alpha, step);
                     double error_sum = 0.0;
@@ -93,7 +91,6 @@ void paramsTD() {
                     }
                     errs[step_ind][alpha_ind] += sqrt(error_sum / n_states);
                 }
-                delete vf;
             }
 
         }
@@ -132,24 +129,23 @@ void testBasisVF(int basis_type) {
 
     double alpha = 1e-4;
 
-
+    unique_ptr<vector<double>> p;
 
     // track errors for each episode
     vector<vector<double>> errs(orders.size(), vector<double>(episodes, 0.0));
     for (int run = 0; run < runs; run++) {
         for (size_t i = 0; i < orders.size(); i++) {
             unsigned long order = orders[i];
-            ValueFunction* vf = new BasisValueFunction(order, basis_type);
+            unique_ptr<ValueFunction> vf(new BasisValueFunction(order, basis_type));
             for (int ep = 0; ep < episodes; ep++) {
                 std::cout << "Polynomial basis: " << basis_name << "Run: " << run << " Episode: " << ep << std::endl;
-                gradientMonteCarlo(vf, alpha, nullptr);
+                gradientMonteCarlo(vf, alpha, p);
                 double error_sum = 0.0;
                 for (int state = 1; state <= n_states; state++) {
                     error_sum += pow((vf->value(state) - vf->p.getTrueStateValue(state)), 2);
                 }
                 errs[i][ep] += sqrt(error_sum / n_states);
             }
-            delete vf;
         }
     }
 
@@ -185,20 +181,21 @@ void testTile() {
 
     int tilingOffset = 4;   ///< how to put so many tilings
 
+    unique_ptr<vector<double>> p;
+
     vector<double> errs(episodes, 0.0); ///< track errors for each episode
     for (int run = 0; run < runs; run++) {
-        ValueFunction* vf = new TilingsValueFunction(numOfTilings, tileWidth, tilingOffset);
+        unique_ptr<ValueFunction> vf(new TilingsValueFunction(numOfTilings, tileWidth, tilingOffset));
         for (int ep = 0; ep < episodes; ep++) {
             std::cout << "Tilings --- Run: " << run << " Episode: " << ep << std::endl;
             double alpha = 1.0 / (ep + 1);
-            gradientMonteCarlo(vf, alpha, nullptr);
+            gradientMonteCarlo(vf, alpha, p);
             double error_sum = 0.0;
             for (int state = 1; state <= n_states; state++) {
                 error_sum += pow((vf->value(state) - vf->p.getTrueStateValue(state)), 2);
             }
             errs[ep] += sqrt(error_sum / n_states);
         }
-        delete vf;
     }
 
     std::ofstream ofs("tile_errors.csv");
@@ -212,18 +209,17 @@ void testTile() {
 
     errs = vector<double>(episodes, 0.0); ///< track errors for each episode
     for (int run = 0; run < runs; run++) {
-        ValueFunction* vf = new AggregValueFunction(n_states/tileWidth);
+        unique_ptr<ValueFunction> vf(new AggregValueFunction(n_states/tileWidth));
         for (int ep = 0; ep < episodes; ep++) {
             std::cout << "Aggregation --- Run: " << run << " Episode: " << ep << std::endl;
             double alpha = 1.0 / (ep + 1);
-            gradientMonteCarlo(vf, alpha, nullptr);
+            gradientMonteCarlo(vf, alpha, p);
             double error_sum = 0.0;
             for (int state = 1; state <= n_states; state++) {
                 error_sum += pow((vf->value(state) - vf->p.getTrueStateValue(state)), 2);
             }
             errs[ep] += sqrt(error_sum / n_states);
         }
-        delete vf;
     }
 
     ofs.open("aggreg_errors.csv");
@@ -237,13 +233,37 @@ void testTile() {
 
 }
 
+
+void testSquareWave() {
+    vector<int> num_samples({10, 40, 160, 2560, 10240});
+    vector<double> feature_widths({0.2, 0.4, 1.0});
+    Interval domain(0.0, 2.0);
+    vector<double> axis_x;
+    for (int i = 0; i < 10; i++) axis_x.push_back(0.2*i);
+
+    for (auto num : num_samples) {
+        std::cout << num << " samples" << std::endl;
+        vector<pair<double, double>> samples = gen_sample(num);
+        for (auto feature_width : feature_widths) {
+            SquareWaveValueFunction vf(feature_width, domain);
+            approximate(samples, vf);
+            vector<double> values(10, 0.0);
+            for (size_t i = 0; i <  10; i++) values[i] = vf.value(axis_x[i]);
+        }
+    }
+
+}
+
+
 int main() {
-    testMonteCarlo();
-    testSemiGradientTD();
-    paramsTD();
-    testBasisVF(POLYNOMIAL_BASES);
-    testBasisVF(FOURIER_BASES);
-    testTile();
+    //testMonteCarlo();
+    //testSemiGradientTD();
+    //paramsTD();
+    //testBasisVF(POLYNOMIAL_BASES);
+    //testBasisVF(FOURIER_BASES);
+    //testTile();
+
+    testSquareWave();
 
     std::string filename = "../plot_results.py";
     std::string command = "python ";

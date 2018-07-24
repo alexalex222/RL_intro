@@ -10,14 +10,17 @@
 #include "aggreg_value_function.h"
 #include "tilings_value_function.h"
 #include "basis_value_function.h"
+#include "square_wave_value_function.h"
+#include <memory>
 
-/*
- * gradient Monte Carlo algorithm
- * @vf: an instance of class ValueFunction
- * @alpha: step size
- * @distribution: array to store the distribution statistics
- */
-void gradientMonteCarlo(ValueFunction* vf, double alpha, vector<double>* distribution = nullptr) {
+using std::unique_ptr;
+using std::shared_ptr;
+
+ /// Gradient Monte Carlo method
+ /// \param vf : pointer of class ValueFunction
+ /// \param alpha : step size
+ /// \param distribution : array to store the distribution statistics
+void gradientMonteCarlo(unique_ptr<ValueFunction>& vf, double alpha, unique_ptr<vector<double>>& distribution) {
     int current_state =vf->p.getStartState();
     vector<int> trajectory;
     trajectory.push_back(current_state);
@@ -44,13 +47,12 @@ void gradientMonteCarlo(ValueFunction* vf, double alpha, vector<double>* distrib
 
 }
 
-/*
- * semi-gradient n-step TD algorithm
- * @valueFunction: an instance of class ValueFunction
- * @alpha: step size
- * @n: # of steps
- */
-void semiGradientTemporalDifference(ValueFunction* vf, double alpha, int n) {
+
+/// Semi-Gradient Temporal Difference method
+/// \param vf : a pointer to class ValueFunciton
+/// \param alpha : step size
+/// \param n : # of step
+void semiGradientTemporalDifference(unique_ptr<ValueFunction>& vf, double alpha, int n) {
     int current_state =vf->p.getStartState();
     vector<int> trajectory;
     trajectory.push_back(current_state);
@@ -58,8 +60,7 @@ void semiGradientTemporalDifference(ValueFunction* vf, double alpha, int n) {
     vector<int> rewards;
     rewards.push_back(0);
 
-    // track time
-    int step = 0;
+    int step = 0;   ///< track time
     int final_step = INT_MAX;
 
     vector<int> end_states = vf->p.getEndStates();
@@ -87,12 +88,12 @@ void semiGradientTemporalDifference(ValueFunction* vf, double alpha, int n) {
                 returns += rewards[t];
             }
 
-            // add state value to the return
+            /// add state value to the return
             if (update_time + n <= final_step) {
                 returns += vf->value(trajectory[update_time + n]);
             }
             int state_to_update = trajectory[update_time];
-            // update the value function
+            /// update the value function
             if (std::find(end_states.begin(), end_states.end(), current_state) == end_states.end()) {
                 double delta = alpha * (returns - vf->value(state_to_update));
                 vf->update(state_to_update, delta);
@@ -105,6 +106,33 @@ void semiGradientTemporalDifference(ValueFunction* vf, double alpha, int n) {
 
     }
 
+}
+
+void approximate (vector<pair<double, double>> samples, SquareWaveValueFunction& vf) {
+    for (auto sample : samples) {
+        double x = sample.first;
+        double y = sample.second;
+        double delta = y - vf.value(x);
+        vf.update(delta, x);
+    }
+}
+
+int squareWave(double x) {
+    if (x > 0.5 && x < 1.5) return 1;
+    else return 0;
+}
+
+vector<std::pair<double, double>> gen_sample(int n) {
+    vector<std::pair<double, double>> samples;
+    for (int i = 0; i < n; i++) {
+        std::random_device rd;  //Will be used to obtain a seed for the random number engine
+        std::mt19937 gen(rd()); //Standard mersenne_twister_engine seeded with rd()
+        std::uniform_real_distribution<double > dis(0.0, 2.0);
+        double x = dis(gen);
+        double y = squareWave(x);
+        samples.emplace_back(std::make_pair(x, y));
+    }
+    return samples;
 }
 
 #endif //CHAPTER09_LEARNING_METHODS_H
